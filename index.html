@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Thomastown Maps</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..100,600..800&family=Public+Sans:wght@400;500&display=swap">
+<style>
+:root { --bg:#eef1f3; --card:#fbfcfc; --ink:#18222c; --muted:#5b6874; --line:#d5dce1; --accent:#1f5f73; }
+@media (prefers-color-scheme: dark) { :root { --bg:#11171c; --card:#172027; --ink:#e5ebef; --muted:#98a6b1; --line:#2b3741; --accent:#7fc3d6; color-scheme: dark } }
+body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.5 "Public Sans", "Segoe UI", Arial, sans-serif; }
+main { max-width:720px; margin:0 auto; padding:48px max(16px, env(safe-area-inset-left)) 48px; }
+h1 { font:800 2.2rem/1.05 "Archivo", "Arial Narrow", Arial, sans-serif; font-stretch:80%; margin:0 0 6px; }
+.sub { color:var(--muted); margin:0 0 28px; }
+.grid { display:grid; gap:12px; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); }
+a.card { display:block; padding:18px 20px; background:var(--card); border:1px solid var(--line); border-radius:10px; color:inherit; text-decoration:none; }
+a.card:hover, a.card:focus-visible { border-color:var(--accent); outline:none; }
+a.card h2 { font:700 1.25rem "Archivo", Arial, sans-serif; font-stretch:85%; margin:0 0 4px; color:var(--accent); }
+a.card p { margin:0; color:var(--muted); font-size:0.92rem; }
+footer { margin-top:28px; color:var(--muted); font-size:0.82rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Thomastown Maps</h1>
+  <p class="sub">Doorknock maps for the Thomastown district: Epping, Lalor, Thomastown and Wollert.</p>
+  <div class="grid">
+    <a class="card" href="progress.html"><h2>District Progress</h2><p>Share of enrolled addresses knocked and answered, and volunteer-adjusted support, by map and suburb.</p></a>
+    <a class="card" href="projections.html"><h2>Map Projections</h2><p>Expected support for every map, ranked within its suburb, to choose where to knock next.</p></a>
+  </div>
+  <footer>Totals per map only. Street maps &copy; OpenStreetMap contributors.</footer>
+</main>
+</body>
+</html>
