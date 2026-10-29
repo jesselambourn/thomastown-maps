@@ -156,8 +156,8 @@ try {
     light = L.maplibreGL({style:'https://tiles.openfreemap.org/styles/positron', attribution:OFM});
   }
 } catch (e) { streets = null; }
-const bases = streets ? {'OpenStreetMap':osm,'Street map (OpenFreeMap)':streets,'Light street map':light,'Esri street map':esri} : {'OpenStreetMap':osm,'Esri street map':esri};
-osm.addTo(map);
+const bases = light ? {'Light street map':light,'OpenStreetMap':osm,'Esri street map':esri,'No background':L.layerGroup()} : {'OpenStreetMap':osm,'Esri street map':esri,'No background':L.layerGroup()};
+(light || osm).addTo(map);
 L.control.layers(bases,null,{position:'topright'}).addTo(map);
 L.control.scale({imperial:false,position:'bottomright'}).addTo(map);
 map.zoomControl.setPosition('bottomright');
