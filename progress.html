@@ -677,16 +677,16 @@ svg.leaflet-image-layer.leaflet-interactive path {
 <style>
 /* Layout: field-office console. Fixed side panel (summary first), map fills the rest; stacks on phones. */
 :root {
-  --bg: #eef1f3; --panel: #fbfcfc; --ink: #18222c; --muted: #5b6874; --line: #d5dce1; --map: #e4e9ec; --street: #b7c1c8;
+  --bg: #eef1f3; --panel: #fbfcfc; --ink: #18222c; --muted: #5b6874; --line: #d5dce1; --map: #e4e9ec; --street: #b7c1c8; --edge: #3a4651; --hatch: #8d99a3; --hatch-bg: #f4f6f7;
   --accent: #1f5f73; --accent-soft: #d5e6eb; --chip: #e6ecef; --warn: #9a5a12;
   --display: "Archivo", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
   --body: "Public Sans", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #11171c; --panel: #172027; --ink: #e5ebef; --muted: #98a6b1; --line: #2b3741; --map: #0f1418; --street: #34424c;
+  --bg: #11171c; --panel: #172027; --ink: #e5ebef; --muted: #98a6b1; --line: #2b3741; --map: #0f1418; --street: #34424c; --edge: #c5ced5; --hatch: #6d7b86; --hatch-bg: #1c262e;
   --accent: #7fc3d6; --accent-soft: #1f3a44; --chip: #22303a; --warn: #e0a35a; color-scheme: dark } }
 :root[data-theme="dark"] {
-  --bg: #11171c; --panel: #172027; --ink: #e5ebef; --muted: #98a6b1; --line: #2b3741; --map: #0f1418; --street: #34424c;
+  --bg: #11171c; --panel: #172027; --ink: #e5ebef; --muted: #98a6b1; --line: #2b3741; --map: #0f1418; --street: #34424c; --edge: #c5ced5; --hatch: #6d7b86; --hatch-bg: #1c262e;
   --accent: #7fc3d6; --accent-soft: #1f3a44; --chip: #22303a; --warn: #e0a35a; color-scheme: dark }
 [hidden] { display: none !important; }
 html, body { height: 100%; }
@@ -722,7 +722,8 @@ h1 { font-family: var(--display); font-stretch: 80%; font-weight: 800; font-size
 .legend svg { width: 100%; height: auto; display: block; overflow: visible; }
 .legend text { fill: var(--muted); font: 500 11px var(--body); font-variant-numeric: tabular-nums; }
 .legend .few { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 0.8rem; margin-top: 8px; }
-.legend .few span { width: 22px; height: 12px; border: 1.5px dashed var(--muted); border-radius: 2px; }
+.legend .few span { width: 22px; height: 14px; border: 1px solid var(--edge); border-radius: 2px; flex: none;
+  background: repeating-linear-gradient(45deg, var(--hatch) 0 1.5px, var(--hatch-bg) 1.5px 5px); }
 .ctl { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 0.82rem; color: var(--muted); }
 .ctl select, .ctl input[type="search"] { font: inherit; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; }
 .ctl input[type="search"] { width: 110px; }
@@ -827,7 +828,7 @@ window.DATA={"maps":{"type":"FeatureCollection","features":[{"type":"Feature","p
   document.getElementById('mindoors').value = String(minDoors);
 
   const map = L.map('map', { zoomSnap: 0.25, preferCanvas: true, attributionControl: false });
-  let fillOp = 0.82;
+  let fillOp = 0.82, edgeFixed = null, hatchFixed = null;
   const R = L.canvas({ padding: 0.5 });
   map.createPane('streets'); map.getPane('streets').style.zIndex = 450; map.getPane('streets').style.pointerEvents = 'none';
   const streets = L.polyline(D.streets, { renderer: L.canvas({ pane: 'streets', padding: 0.5 }), color: css('--street'), weight: 1, opacity: 0.6, interactive: false }).addTo(map);
@@ -837,15 +838,18 @@ window.DATA={"maps":{"type":"FeatureCollection","features":[{"type":"Feature","p
   try { if (L.maplibreGL) light = L.maplibreGL({ style: 'https://tiles.openfreemap.org/styles/positron', attribution: '&copy; <a href="https://openfreemap.org" target="_blank">OpenFreeMap</a> &copy; OpenMapTiles &copy; OpenStreetMap contributors' }); } catch (e) { light = null; }
   const bases = light ? { 'Light street map': light, 'OpenStreetMap': osm, 'Esri street map': esri, 'No background': L.layerGroup() } : { 'OpenStreetMap': osm, 'Esri street map': esri, 'No background': L.layerGroup() };
   (light || osm).addTo(map); map.removeLayer(streets); fillOp = 0.6;
+  edgeFixed = '#2f3a44'; hatchFixed = ['#8d99a3', '#f4f6f7'];  // street map background is always light
   L.control.attribution({ prefix: false }).addTo(map);
-  L.control.layers(bases, { 'Streets traced from the roll': streets }, { position: 'topright' }).addTo(map);
+  L.control.layers(bases, null, { position: 'topright' }).addTo(map);
+  // map edges stay visible on every fill: one consistent dark outline (light in dark mode on the plain background)
+  const edge = () => edgeFixed || css('--edge');
   function style(f) {
     const p = f.properties, m = M[metric];
     const few = metric === 'sup' && p.doors < minDoors;
-    const v = few ? null : m.key(p);
-    const t = v == null ? 0 : (v - m.lo) / (m.hi - m.lo);
-    return { renderer: R, weight: few ? 1.2 : 0.8, color: few ? css('--muted') : css('--panel'), dashArray: few ? '4 3' : null,
-      fillColor: v == null ? css('--map') : ramp(m.stops, t), fillOpacity: v == null ? Math.min(0.25, fillOp) : fillOp };
+    const t = few ? 0 : (m.key(p) - m.lo) / (m.hi - m.lo);
+    // too few answered doors: hatched, so it can't be mistaken for an average (pale) support colour
+    return { weight: 1, color: edge(), opacity: 0.85,
+      fillColor: few ? 'url(#tdp-hatch)' : ramp(m.stops, t), fillOpacity: few ? Math.max(0.6, fillOp) : fillOp };
   }
   function tip(p) {
     const on = k => metric === k ? ' on' : '';
@@ -857,10 +861,21 @@ window.DATA={"maps":{"type":"FeatureCollection","features":[{"type":"Feature","p
       <div class="r${on('sup')}"><span>Support (adjusted)</span><span>${sup}</span></div>
       <div class="r"><span>Answered doors</span><span>${p.doors}</span></div></div>`;
   }
-  const layer = L.geoJSON(D.maps, { style, onEachFeature: (f, l) => {
+  const SV = L.svg({ padding: 0.5 });
+  const layer = L.geoJSON(D.maps, { style, renderer: SV, onEachFeature: (f, l) => {
     l.bindTooltip(() => tip(f.properties), { sticky: true, className: 'tipwrap', direction: 'top', offset: [0, -8] });
     l.on('click', () => { l.openTooltip(); });
+    l.on('mouseover', () => { l.setStyle({ weight: 3, opacity: 1 }); l.bringToFront(); });
+    l.on('mouseout', () => { layer.resetStyle(l); });
   } }).addTo(map);
+  function hatch() {
+    const svg = SV._container; if (!svg) return;
+    let defs = svg.querySelector('defs');
+    if (!defs) { defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs'); svg.insertBefore(defs, svg.firstChild); }
+    const fg = hatchFixed ? hatchFixed[0] : css('--hatch'), bg = hatchFixed ? hatchFixed[1] : css('--hatch-bg');
+    defs.innerHTML = `<pattern id="tdp-hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="${bg}"/><rect width="2" height="6" fill="${fg}"/></pattern>`;
+  }
+  hatch();
   map.fitBounds(layer.getBounds(), { padding: [12, 12] });
   const labels = L.layerGroup(F.map(f => L.marker([f.properties.ly, f.properties.lx], { interactive: false, keyboard: false,
     icon: L.divIcon({ className: 'num', html: f.properties.num, iconSize: null }) })));
@@ -881,7 +896,7 @@ window.DATA={"maps":{"type":"FeatureCollection","features":[{"type":"Feature","p
     svg.innerHTML = h; svg.style.color = css('--muted');
     const few = metric === 'sup', n = F.filter(f => f.properties.doors < minDoors).length;
     document.getElementById('few').hidden = !few; document.getElementById('minwrap').hidden = !few;
-    document.getElementById('fewtxt').textContent = `Fewer than ${minDoors} answered doors (${n} maps), too few to colour`;
+    document.getElementById('fewtxt').textContent = `Hatched: fewer than ${minDoors} answered doors (${n} maps), too few to judge`;
   }
   function bar(v, max, on, extra = '') { return `<div class="bar"><i class="${on ? 'on' : ''}" style="width:${Math.min(100, v / max * 100).toFixed(1)}%"></i>${extra}</div>`; }
   function subs() {
@@ -907,7 +922,7 @@ window.DATA={"maps":{"type":"FeatureCollection","features":[{"type":"Feature","p
   function render() {
     document.querySelectorAll('#metric button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.m === metric)));
     document.getElementById('help').textContent = M[metric].help;
-    layer.setStyle(style); legend(); subs();
+    hatch(); layer.setStyle(style); legend(); subs();
   }
   document.querySelectorAll('#metric button').forEach(b => b.addEventListener('click', () => {
     metric = b.dataset.m; try { localStorage.setItem('tdp-metric', metric); } catch (e) {} render();
