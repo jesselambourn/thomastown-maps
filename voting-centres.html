@@ -75,7 +75,7 @@ dialog#help .close{position:absolute;top:10px;right:12px;border:0;background:non
 <div><div class="eyebrow"><a href="index.html" style="color:inherit;text-decoration:none">&larr; Thommo Maps</a></div><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px"><h1>Thomastown voting centres</h1><button id="helpb" class="helpb" aria-label="How to use this page" title="How to use this page">?</button></div>
 <p class="sub">The early voting centres and election-day booths Thomastown voters will use, ranked by votes from Thomastown voters × their support squared (the Support ×2 model). Circle size is the whole centre; colour is support among Thomastown voters there.</p></div>
 <div class="seg" id="kind"><button aria-pressed="true" data-k="e">Early voting centres</button><button aria-pressed="false" data-k="b">Election day booths</button></div>
-<div><div class="lab">Use past VS votes (2022, 2025) in support</div><div class="seg" id="vsw"><button aria-pressed="true" data-v="on">On</button><button aria-pressed="false" data-v="off">Off</button></div></div>
+<div><div class="lab">Use past VS votes (2022, 2025) in support</div><div class="seg" id="vsw"><button aria-pressed="false" data-v="on">On</button><button aria-pressed="true" data-v="off">Off</button></div></div>
 
 <div id="gwrap" hidden><span id="glab"></span><select id="gsel"></select></div>
 <div><div class="lab" id="clab">Circle colour: likely VS support among Thomastown voters there, compared with the average across Thomastown's centres</div><div class="key" id="ckey"></div></div>
@@ -121,8 +121,8 @@ function refName(x){const r=refOf(x);return r?(r=='Inner'||r=='Outer'?r+' NM':r)
 const scol=v=>{for(let i=0;i<6;i++) if(v<SB[i][1]) return css('--s'+(i+1));return css('--s6')};
 const DISTS=['Thomastown'];
 const slug=n=>n.toLowerCase().replace(/[^a-z]+/g,'-');
-let kind='e',mode='dist',grp='Thomastown',vs='on';
-(()=>{const h=location.hash.slice(1).split('/');if(h[0]=='b')kind='b';if(h.includes('novs'))vs='off'})();
+let kind='e',mode='dist',grp='Thomastown',vs='off';
+(()=>{const h=location.hash.slice(1).split('/');if(h[0]=='b')kind='b';if(h.includes('vs'))vs='on';if(h.includes('novs'))vs='off'})();
 const map=L.map('map',{preferCanvas:true,attributionControl:false,zoomSnap:.25}).setView([-37.68,144.95],10);
 const cv=L.canvas({padding:.3});
 L.layerGroup(D.roads.map(r=>L.polyline(r[1].map(p=>[p[1],p[0]]),{renderer:cv,color:r[0]?css('--fwy'):css('--road'),weight:r[0]?1.6:.8,opacity:.8,interactive:false}))).addTo(map);
@@ -140,7 +140,7 @@ function popup(x){
   const g=mode=='dist'&&grp?x.ds.find(z=>z[0]==grp):null;
   return `<div class="pp"><b>${x.n}</b><div>${x.a}</div><div class="sub">${x.vn}</div><div class="g"><span>Total votes at centre</span><span>${fmt(x.tv)}</span><span>Support, all voters</span><span>${sw(rel(x.ti,x))}<br><small>${svs(rel(x.ti,x),refName(x))}</small></span>${g?`<span>Votes from Thomastown voters</span><span>${fmt(g[2])} (${g[4]}% of the centre)</span><span>Share of Thomastown's ${kind=='e'?'early':'election-day'} votes</span><span>${x.dshare}%</span><span>Rank for Thomastown</span><span>#${g[1]}</span><span>Support, Thomastown voters</span><span>${sw(rel(g[3],x))}<br><small>${svs(rel(g[3],x),'Thomastown')}</small></span>`:''}<span>Past VS vote</span><span>2022 state Lower House: ${x.pv[4]}%${x.pv[5]?' at this booth':' (area)'}<br>2022 state Upper House: ${x.pv[0]}%${x.pv[1]?' at this booth':' (area)'}<br>2025 Senate: ${x.pv[2]}%${x.pv[3]?' at this booth':' (area)'}${x.pv[6]!=null?`<br>2025 House: ${x.pv[6]}%${x.pv[7]?' at this booth':' (area)'}`:''}</span><span>Belongs to</span><span>${x.host||x.od}${x.vl?'':'<br><small>Not on Thomastown\'s VEC list</small>'}</span></div><div class="dl2"><div class="lab" style="margin:6px 0 2px">Other districts' ranks (VEC lists)</div>${dd}${(x.oth||[]).map(z=>`<div><span>${z[0]}</span><span>${z[1]}% of votes</span></div>`).join('')}</div></div>`}
 function render(fit=true){
-  try{history.replaceState(null,'','#'+kind+(vs=='off'?'/novs':''))}catch(e){}
+  try{history.replaceState(null,'','#'+kind+(vs=='on'?'/vs':''))}catch(e){}
   document.querySelectorAll('#kind button').forEach(c=>c.setAttribute('aria-pressed',c.dataset.k==kind));
   document.querySelectorAll('#mode button').forEach(c=>c.setAttribute('aria-pressed',c.dataset.m==mode));document.querySelectorAll('#vsw button').forEach(c=>c.setAttribute('aria-pressed',c.dataset.v==vs));
   const gw=document.getElementById('gwrap'),gs=document.getElementById('gsel');gw.hidden=true;
