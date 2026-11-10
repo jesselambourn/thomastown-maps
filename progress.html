@@ -716,7 +716,7 @@ h1 { font-family: var(--display); font-stretch: 80%; font-weight: 800; font-size
 .sub-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 .sub-name { font-family: var(--display); font-stretch: 85%; font-weight: 700; font-size: 1.02rem; }
 .sub-n { color: var(--muted); font-size: 0.78rem; font-variant-numeric: tabular-nums; }
-.rows { display: grid; grid-template-columns: 74px 1fr 64px; gap: 4px 8px; align-items: center; font-size: 0.8rem; }
+.rows { display: grid; grid-template-columns: 74px 1fr auto; gap: 4px 8px; align-items: center; font-size: 0.8rem; }
 .rows .k { color: var(--muted); }
 .rows .v { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
 .rows .on { color: var(--ink); font-weight: 600; }
@@ -980,8 +980,8 @@ window.DATA={"maps":{"type":"FeatureCollection","features":[{"type":"Feature","p
       h += `<button type="button" class="sub${n === 'District' ? ' district' : ''}" data-s="${n}" id="sub-${n}">
         <div class="sub-head"><span class="sub-name">${n === 'District' ? 'Whole district' : n}</span><span class="sub-n">${N(s).toLocaleString()} ${isAll() ? 'addresses' : 'homes'} · ${s.doors.toLocaleString()} answered doors</span></div>
         <div class="rows">
-          <span class="k${metric === 'knock' ? ' on' : ''}">Knocked</span>${bar(k, 1, metric === 'knock')}<span class="v">${pct(k)}</span>
-          <span class="k${metric === 'ans' ? ' on' : ''}">Answered</span>${bar(a, 1, metric === 'ans')}<span class="v">${pct(a)}</span>
+          <span class="k${metric === 'knock' ? ' on' : ''}">Knocked</span>${bar(k, 1, metric === 'knock')}<span class="v">${K(s).toLocaleString()}<span class="sub-n"> · </span>${pct(k)}</span>
+          <span class="k${metric === 'ans' ? ' on' : ''}">Answered</span>${bar(a, 1, metric === 'ans')}<span class="v">${A(s).toLocaleString()}<span class="sub-n"> · </span>${pct(a)}</span>
           <span class="k${metric === 'sup' ? ' on' : ''}">Support</span>${bar(s.adj, supMax, metric === 'sup', ci)}<span class="v">${pct(s.adj, 1)}<span class="sub-n"> ±${(s.moe * 100).toFixed(0)}</span></span>
           <span class="k${metric === 'sc' ? ' on' : ''}">Score</span>${bar(s.sc, 0.6, metric === 'sc')}<span class="v">${num(s.sc)}<span class="sub-n"> ±${(s.scm * 100).toFixed(0)}</span></span>
         </div></button>`;
