@@ -36,6 +36,7 @@ main { max-width:1040px; margin:-56px auto 0; padding:0 16px 40px; position:rela
 @media (max-width:760px) { .stats { grid-template-columns:repeat(2, minmax(0, 1fr)) } }
 .stat { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px 14px 12px }
 .stat b { display:block; font:800 clamp(1.4rem, 4vw, 1.9rem)/1 "Archivo", Arial, sans-serif; font-stretch:80%; color:var(--accent) }
+.stat b small { font-size:.62em; color:var(--ink); font-weight:700; margin-left:.25em }
 .stat span { font-size:.8rem; color:var(--muted); line-height:1.3; display:block; margin-top:6px }
 h2 { font:700 1.15rem "Archivo", Arial, sans-serif; font-stretch:85%; margin:0 0 2px }
 .note { color:var(--muted); font-size:.85rem; margin:0 0 10px }
@@ -116,6 +117,9 @@ const NS = 'http://www.w3.org/2000/svg';
 function el(tag, attrs, parent, text) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (text != null) e.textContent = text; if (parent) parent.appendChild(e); return e; }
 const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 let cur = 'District', custom = null, range = 'aug', mode = 'all';
+const den = S => mode === 'roll' ? S.homes : S.app;
+const pct = (v, S) => den(S) ? Math.min(100, Math.round(100 * v / den(S))) + '%' : '';
+const both = (v, S) => fmt(v) + (den(S) ? ' (' + pct(v, S) + ')' : '');
 const key = n => n + (mode === 'roll' ? '|roll' : ''), DS = () => D.series[key('District')];
 const MODES = [['all','All app addresses'],['roll','Electoral roll only']];
 const RANGES = [['aug','Since August'],['all','Whole campaign (from 1 June)']];
@@ -197,14 +201,14 @@ function drawCum(S, sc) {
   sc.forEach((s, j) => { el('polyline', {points:proj[j].map(([d, v]) => x(d).toFixed(1) + ',' + y(v).toFixed(1)).join(' '), fill:'none', stroke:s.color, 'stroke-width':2.2, 'stroke-dasharray':'6 4'}, svg); ends.push([proj[j][proj[j].length - 1][1], s]); });
   // end labels, nudged apart
   ends.sort((a, b) => b[0] - a[0]); let prev = -1e9;
-  ends.forEach(([v, s]) => { let yy = Math.max(y(v) + 4, prev + 14); prev = yy; el('text', {x:W-R+4, y:yy, style:'fill:' + s.color + ';font-weight:600'}, svg, fmt(v)); });
+  ends.forEach(([v, s]) => { let yy = Math.max(y(v) + 4, prev + 26); prev = yy; const t = el('text', {x:W-R+4, y:yy, style:'fill:' + s.color + ';font-weight:600'}, svg); el('tspan', {x:W-R+4}, t, fmt(v)); el('tspan', {x:W-R+4, dy:12, style:'font-size:.85em'}, t, pct(v, S)); });
   el('circle', {cx:x(last), cy:y(S.cum[S.cum.length - 1]), r:4, fill:css('--accent')}, svg);
   markers(svg, x, T, H - B);
   const dot = el('circle', {r:4, fill:css('--ink'), cx:0, cy:0, visibility:'hidden'}, svg);
   hover(svg, W, (px) => { const f = Math.max(0, Math.min(1, (px - L) / (W - L - R))); const d = addDays(d0, Math.round(f * span)); if (d < d0) return '';
-    if (d <= last) { const i = Math.round((d - d0) / 864e5); const v = S.cum[Math.min(i, S.cum.length - 1)]; dot.setAttribute('cx', x(d)); dot.setAttribute('cy', y(v)); dot.setAttribute('visibility', 'visible'); return '<b>' + short(d) + '</b>' + fmt(v) + ' doors knocked'; }
+    if (d <= last) { const i = Math.round((d - d0) / 864e5); const v = S.cum[Math.min(i, S.cum.length - 1)]; dot.setAttribute('cx', x(d)); dot.setAttribute('cy', y(v)); dot.setAttribute('visibility', 'visible'); return '<b>' + short(d) + '</b>' + both(v, S) + ' doors knocked'; }
     dot.setAttribute('visibility', 'hidden'); let h = '<b>' + short(d) + ' (projected)</b>';
-    sc.forEach((s, j) => { const p = proj[j]; let v = p[0][1]; for (const [dd, vv] of p) { if (dd <= d) v = vv; } h += '<span class="sw" style="background:' + s.color + '"></span>' + s.name + ': ' + fmt(v) + '<br>'; });
+    sc.forEach((s, j) => { const p = proj[j]; let v = p[0][1]; for (const [dd, vv] of p) { if (dd <= d) v = vv; } h += '<span class="sw" style="background:' + s.color + '"></span>' + s.name + ': ' + both(v, S) + '<br>'; });
     return h; }, () => dot.setAttribute('visibility', 'hidden'));
 }
 
@@ -223,15 +227,15 @@ function render() {
   const S = D.series[key(cur)], sc = scenarios(S);
   document.querySelectorAll('#seg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.s === cur));
   document.querySelectorAll('.rng button').forEach(b => b.setAttribute('aria-pressed', b.dataset.r === range));
-  document.getElementById('s-doors').textContent = fmt(S.total_doors);
-  document.getElementById('s-doors-l').textContent = mode === 'roll' ? 'enrolled homes knocked so far, of ' + fmt(S.homes) + ' (each unit separately)' : 'doors knocked so far (each address once)';
-  document.getElementById('s-proj-l').textContent = (mode === 'roll' ? 'enrolled homes' : 'doors') + ' knocked by 25 Nov at the recent pace';
+  document.getElementById('s-doors').innerHTML = fmt(S.total_doors) + (den(S) ? '<small>' + pct(S.total_doors, S) + '</small>' : '');
+  document.getElementById('s-doors-l').textContent = mode === 'roll' ? 'enrolled homes knocked so far, of ' + fmt(S.homes) + ' (each unit separately)' : 'doors knocked so far (each address once), of ' + fmt(S.app);
+  document.getElementById('s-proj-l').textContent = (mode === 'roll' ? 'enrolled homes' : 'doors') + ' knocked by 25 Nov at the recent pace, and share of ' + (mode === 'roll' ? 'enrolled homes' : 'all addresses');
   document.querySelectorAll('#mode button').forEach(b => b.setAttribute('aria-pressed', b.dataset.m === mode));
   document.getElementById('s-rate').textContent = fmt(S.rate);
   let dl = 0; for (let d = addDays(last, 1); d <= day(END); d = addDays(d, 1)) dl++;
   document.getElementById('s-days').textContent = dl;
   const recentNew = projDays(S.rate).reduce((a, [, v]) => a + v, 0) * S.newshare;
-  document.getElementById('s-proj').textContent = fmt(S.total_doors + recentNew);
+  document.getElementById('s-proj').innerHTML = fmt(S.total_doors + recentNew) + (den(S) ? '<small>' + pct(S.total_doors + recentNew, S) + '</small>' : '');
   drawWeekly(S, sc); drawCum(S, sc);
   const leg = '<span><i class="box" style="background:' + css('--accent') + '"></i>New doors</span><span><i class="box" style="background:' + css('--light') + '"></i>Revisits</span>' +
     sc.map(s => '<span><i style="border-color:' + s.color + '"></i>' + s.name + ' (' + fmt(s.rate) + ' a week)</span>').join('');
@@ -239,7 +243,7 @@ function render() {
   document.getElementById('leg2').innerHTML = '<span><i class="box" style="background:' + css('--accent') + '"></i>Actual</span>' + sc.map(s => '<span><i style="border-color:' + s.color + '"></i>' + s.name + '</span>').join('');
   const days = projDays(1); const ev = days.filter(([d]) => d < day('2026-11-18')).reduce((a, [, v]) => a + v, 0), all = days.reduce((a, [, v]) => a + v, 0);
   let t = '<tr><th>Scenario</th><th>A week</th><th>Knocked ' + short(addDays(last,1)) + '–25 Nov</th><th>New doors</th><th>Total by 17 Nov</th><th>Total by 25 Nov</th></tr>';
-  sc.forEach(s => { t += '<tr><td><span class="sw" style="background:' + s.color + '"></span>' + s.name + '</td><td>' + fmt(s.rate) + '</td><td>' + fmt(s.rate * all) + '</td><td>' + fmt(s.rate * all * S.newshare) + '</td><td>' + fmt(S.total_doors + s.rate * ev * S.newshare) + '</td><td>' + fmt(S.total_doors + s.rate * all * S.newshare) + '</td></tr>'; });
+  sc.forEach(s => { t += '<tr><td><span class="sw" style="background:' + s.color + '"></span>' + s.name + '</td><td>' + fmt(s.rate) + '</td><td>' + fmt(s.rate * all) + '</td><td>' + fmt(s.rate * all * S.newshare) + '</td><td>' + both(S.total_doors + s.rate * ev * S.newshare, S) + '</td><td>' + both(S.total_doors + s.rate * all * S.newshare, S) + '</td></tr>'; });
   document.getElementById('ptab').innerHTML = t;
   const r = document.getElementById('rate'); document.getElementById('rate-o').textContent = custom == null ? 'drag to add a line' : fmt(custom * (cur === 'District' ? 1 : S.rate / DS().rate)) + ' a week';
 }
