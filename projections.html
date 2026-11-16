@@ -76,11 +76,10 @@ select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 <button class="toggle" id="toggle" type="button">Legend &amp; list</button>
 <div class="card" id="card">
   <button class="close" id="close" type="button" aria-label="Hide panel">✕</button>
-  <h1 id="ttl">Ranked north and south of O'Herns Rd</h1>
+  <h1 id="ttl">Ranked across the district</h1>
   <p class="sub" id="ttlsub"></p>
   <div class="label">Rank within</div>
-  <div class="seg" id="scope"><button type="button" data-s="sub" aria-pressed="false">Suburb</button><button type="button" data-s="sec" aria-pressed="true">North / South ★</button><button type="button" data-s="dist" aria-pressed="false">District</button></div>
-  <p class="rec">★ Recommended: North / South is best for targeting doorknocks.</p>
+  <div class="seg" id="scope"><button type="button" data-s="sub" aria-pressed="false">Suburb</button><button type="button" data-s="sec" aria-pressed="false">North / South</button><button type="button" data-s="dist" aria-pressed="true">District</button></div>
   <div class="label">Rank by</div>
   <select id="metric" aria-label="Measure to rank by"></select>
   <div class="label">Finished maps</div>
@@ -270,7 +269,7 @@ function setScope(k){ scope = SCOPES[k];
   document.getElementById('poslbl').textContent = 'Position within ' + scope.of;
   document.querySelectorAll('#scope button').forEach(x=>x.setAttribute('aria-pressed', x.dataset.s===k)); }
 document.getElementById('scope').addEventListener('click',e=>{ const b=e.target.closest('button'); if(b){ setScope(b.dataset.s); redraw(); } });
-setScope('sec');
+setScope('dist');
 function redraw(){ rerank(); geo.setStyle(style); drawStats(); drawLegend(); drawList(); drawLabels(); }
 const msel = document.getElementById('metric');
 msel.innerHTML = MET.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
