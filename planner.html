@@ -63,9 +63,11 @@ select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .rec{margin:6px 0 0;font-size:12px;color:var(--muted)}
 #ttl,#ttlsub{display:none}
 .tval{font:700 28px/1 var(--display);margin:4px 0 2px}.tnote{font-size:12px;color:var(--muted);margin:2px 0 6px}
-#tslider{width:100%}.tticks{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+#tslider{width:100%}
+#r2badge{position:fixed;top:10px;right:58px;z-index:1200;background:#e6007e;color:#fff;font:700 14px/1 var(--display);letter-spacing:.04em;padding:9px 14px;border-radius:999px;box-shadow:0 2px 8px rgba(0,0,0,.35);border:2px solid #fff;cursor:pointer;white-space:nowrap}
+#r2badge b{opacity:.85;margin-left:8px}.tticks{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
 #scope button[data-s=sec]{flex:1.5;white-space:nowrap}
-@media (max-width:640px){.card{max-height:36%;padding:8px 12px} .card .mhide{display:none} .seg button{padding:4px} .tticks{display:none} .card .cat{font-size:11.5px;padding:0;line-height:1.2} .card .cat i{width:10px;height:10px} .vleg{font-size:11px!important;padding:4px 8px!important;line-height:1.35!important} .card .sub{display:none} .card h1{font-size:19px} .tval{font-size:21px} .tnote{font-size:11px;margin-bottom:2px} .card .label{margin-top:6px} body:has(.card:not(.collapsed)) .toggle{display:none}}
+@media (max-width:640px){.card{max-height:36%;padding:8px 12px} .card .mhide{display:none} .seg button{padding:4px} .tticks{display:none} .card .cat{font-size:11.5px;padding:0;line-height:1.2} .card .cat i{width:10px;height:10px} .vleg{font-size:11px!important;padding:4px 8px!important;line-height:1.35!important} .card .sub{display:none} .card h1{font-size:19px} .tval{font-size:21px} .tnote{font-size:11px;margin-bottom:2px} .card .label{margin-top:6px} body:has(.card:not(.collapsed)) .toggle{display:none} #r2badge{top:50px;left:10px;right:auto;font-size:12px;padding:7px 11px} body:has(.card:not(.collapsed)) #r2badge{display:none!important}}
 </style>
 </head>
 <style>
@@ -226,7 +228,7 @@ function tip(p){
   if (!ok(p)) return `<b>Map ${p.num}</b> · ${p.sub}<br>Finished (${p.left} left)<br>From Epping EVC: ${mins(t.walk)} walk · ${mins(t.drive)} drive`;
   return `<b>Map ${p.num}</b> · ${p.sub}`+
     `<br><b style="font-size:14px">#${p.rt} best map in the district</b> at ${hlab(thour)} (${tday==='we'?'weekend':'weekday'})`+
-    (p.r2 ? `<br>${p.left} new door${p.left===1?'':'s'} + ${p.r2[0]+p.r2[1]+p.r2[2]} round 2 doors (${p.r2[0]} not home, ${p.r2[1]} busy or neutral, ${p.r2[2]} supporters)` + (age ? `<br>Median age ${age}` : '')
+    (p.r2 ? (age ? `<br>Round 2 map · median age ${age}` : '<br>Round 2 map')
           : `<br>${p.left} doors left` + (age ? ` · median age ${age}` : ''))+
     `<br>From Epping EVC: ${mins(t.walk)} walk · ${mins(t.drive)} drive`;
 }
@@ -259,14 +261,15 @@ map.fitBounds(geo.getBounds(),{padding:[20,20]});
 const labels = L.layerGroup().addTo(map);
 function isDark(hex){ const n=parseInt(hex.slice(1),16); const r=n>>16,g=n>>8&255,b=n&255; return (0.299*r+0.587*g+0.114*b) < 130; }
 function drawLabels(){
-  labels.clearLayers(); const z=map.getZoom();
+  labels.clearLayers(); const z=map.getZoom(); const LABEL_MINZ=14;
+  if (z < LABEL_MINZ) return;
   ALL.forEach(p=>{ const c=fill(p); const dark = c && isDark(c) && opacity>.5;
     const extra = c && z>=14 ? ` <span class="g">#${metric.rk(p)}/${p.c}</span>` : '';
     labels.addLayer(L.marker([p.ly,p.lx],{interactive:false,keyboard:false,
       icon:L.divIcon({className:'',html:`<div class="lbl ${dark?'dark':''} ${z<14?'small':''}">${p.num}${extra}</div>`,iconSize:[80,14],iconAnchor:[40,7]})}));
   });
 }
-map.on('zoomend',()=>{ if(map.getZoom()<12) map.removeLayer(labels); else { if(!map.hasLayer(labels)) labels.addTo(map); drawLabels(); }});
+map.on('zoomend',()=>{ if(map.getZoom()<14) map.removeLayer(labels); else { if(!map.hasLayer(labels)) labels.addTo(map); drawLabels(); }});
 function drawStats(){
   const rows = [...new Set(ALL.filter(has).map(p=>p.grp))].sort().map(s=>{ const g = ALL.filter(p=>ok(p)&&p.grp===s); const best = g.filter(p=>metric.rk(p)===1).map(p=>p.num).join(', ');
     return `<div class="cat"><i style="background:${COLS[6]}"></i><span>${s}: best is ${best}</span><span>${g.length} maps</span></div>`; });
@@ -305,7 +308,7 @@ function setTime(){
   document.getElementById('tnote').textContent = `About ${Math.round(m*100)}% of unknocked enrolled doors answer at this time across the district` + (tday==='we' && thour>=16 ? ' (few weekend evening knocks so far, so this is a rough estimate)' : thour===10 ? ' (few knocks before 11am so far, so this is a rough estimate)' : '') + '.';
 }
 document.getElementById('r2').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return;
-  document.querySelectorAll('#r2 button').forEach(x=>x.setAttribute('aria-pressed', x===b)); r2 = b.dataset.r==='1';
+  document.querySelectorAll('#r2 button').forEach(x=>x.setAttribute('aria-pressed', x===b)); r2 = b.dataset.r==='1'; document.getElementById('r2badge').style.display = r2 ? '' : 'none';
   const nt = document.getElementById('r2note'); nt.style.display = r2 ? '' : 'none';
   if (r2) { const v = Object.values(R2), s = i => v.reduce((a,q)=>a+q[i],0);
     nt.textContent = `${v.length} maps within a 15 minute walk of the Salicki Ave EVC (bold outline) also count their round 2 doors, as with the app's Round 2 + "Neutral and up": ${s(0).toLocaleString()} not home, ${s(1).toLocaleString()} busy or neutral, ${s(2).toLocaleString()} supporters. Finished maps there come back into the ranking.`; }
@@ -340,5 +343,7 @@ document.getElementById('close').onclick=()=>card.classList.add('collapsed');
 if(window.innerWidth<=640) card.classList.add('collapsed');
 redraw();
 </script>
+<div id="r2badge" style="display:none" role="button" title="Turn round 2 off">ROUND 2 ON · near Epping EVC<b>✕</b></div>
+<script>document.getElementById("r2badge").addEventListener("click",()=>document.querySelector('#r2 button[data-r="0"]').click());</script>
 </body>
 </html>

@@ -230,14 +230,15 @@ map.fitBounds(geo.getBounds(),{padding:[20,20]});
 const labels = L.layerGroup().addTo(map);
 function isDark(hex){ const n=parseInt(hex.slice(1),16); const r=n>>16,g=n>>8&255,b=n&255; return (0.299*r+0.587*g+0.114*b) < 130; }
 function drawLabels(){
-  labels.clearLayers(); const z=map.getZoom();
+  labels.clearLayers(); const z=map.getZoom(); const LABEL_MINZ=14;
+  if (z < LABEL_MINZ) return;
   ALL.forEach(p=>{ const c=fill(p); const dark = c && isDark(c) && opacity>.5;
     const extra = c && z>=14 ? ` <span class="g">#${metric.rk(p)}/${p.c}</span>` : '';
     labels.addLayer(L.marker([p.ly,p.lx],{interactive:false,keyboard:false,
       icon:L.divIcon({className:'',html:`<div class="lbl ${dark?'dark':''} ${z<14?'small':''}">${p.num}${extra}</div>`,iconSize:[80,14],iconAnchor:[40,7]})}));
   });
 }
-map.on('zoomend',()=>{ if(map.getZoom()<12) map.removeLayer(labels); else { if(!map.hasLayer(labels)) labels.addTo(map); drawLabels(); }});
+map.on('zoomend',()=>{ if(map.getZoom()<14) map.removeLayer(labels); else { if(!map.hasLayer(labels)) labels.addTo(map); drawLabels(); }});
 function drawStats(){
   const rows = [...new Set(ALL.filter(has).map(p=>p.grp))].sort().map(s=>{ const g = ALL.filter(p=>ok(p)&&p.grp===s); const best = g.filter(p=>metric.rk(p)===1).map(p=>p.num).join(', ');
     return `<div class="cat"><i style="background:${COLS[6]}"></i><span>${s}: best is ${best}</span><span>${g.length} maps</span></div>`; });
