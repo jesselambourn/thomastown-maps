@@ -65,6 +65,7 @@ select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .tval{font:700 28px/1 var(--display);margin:4px 0 2px}.tnote{font-size:12px;color:var(--muted);margin:2px 0 6px}
 #tslider{width:100%}.tticks{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
 #scope button[data-s=sec]{flex:1.5;white-space:nowrap}
+@media (max-width:640px){.card{max-height:36%;padding:8px 12px} .card .mhide{display:none} .seg button{padding:4px} .tticks{display:none} .card .cat{font-size:11.5px;padding:0;line-height:1.2} .card .cat i{width:10px;height:10px} .vleg{font-size:11px!important;padding:4px 8px!important;line-height:1.35!important} .card .sub{display:none} .card h1{font-size:19px} .tval{font-size:21px} .tnote{font-size:11px;margin-bottom:2px} .card .label{margin-top:6px} body:has(.card:not(.collapsed)) .toggle{display:none}}
 </style>
 </head>
 <style>
@@ -81,21 +82,21 @@ select:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
   <button class="close" id="close" type="button" aria-label="Hide panel">✕</button>
   <h1>Doorknock planner</h1>
   <p class="sub">The best maps to knock at the time you choose. Blue maps are the best options at that time, red the weakest.</p>
-  <div class="label">Day</div>
+  <div class="label mhide">Day</div>
   <div class="seg" id="day"><button type="button" data-d="wd" aria-pressed="true">Weekday</button><button type="button" data-d="we" aria-pressed="false">Weekend</button></div>
-  <div class="label">Time</div>
+  <div class="label mhide">Time</div>
   <div class="tval" id="tval">2pm</div>
   <input type="range" id="tslider" min="10" max="19" step="1" value="14" aria-label="Time of day">
   <div class="tticks"><span>10am</span><span>1pm</span><span>4pm</span><span>7pm</span></div>
   <p class="tnote" id="tnote"></p>
   <h1 id="ttl">Ranked across the district</h1>
   <p class="sub" id="ttlsub"></p>
-  <div class="label">Rank within</div>
-  <div class="seg" id="scope"><button type="button" data-s="sub" aria-pressed="false">Suburb</button><button type="button" data-s="sec" aria-pressed="false">North / South</button><button type="button" data-s="dist" aria-pressed="true">District</button></div>
-  <div class="label">Rank by</div>
-  <select id="metric" aria-label="Measure to rank by"></select>
-  <div class="label">Finished maps</div>
-  <div class="seg" id="fin"><button type="button" data-f="0" aria-pressed="false">Include</button><button type="button" data-f="1" aria-pressed="true">Hide &amp; re-rank</button></div>
+  <div class="label" style="display:none">Rank within</div>
+  <div class="seg" id="scope" style="display:none"><button type="button" data-s="sub" aria-pressed="false">Suburb</button><button type="button" data-s="sec" aria-pressed="false">North / South</button><button type="button" data-s="dist" aria-pressed="true">District</button></div>
+  <div class="label" style="display:none">Rank by</div>
+  <select id="metric" aria-label="Measure to rank by" style="display:none"></select>
+  <div class="label mhide">Finished maps</div>
+  <div class="seg mhide" id="fin"><button type="button" data-f="0" aria-pressed="false">Include</button><button type="button" data-f="1" aria-pressed="true">Hide &amp; re-rank</button></div>
   <div class="stats" id="stats"></div>
   <div class="label" id="poslbl">Position within its suburb</div>
   <div class="klegend" id="klegend"></div>
